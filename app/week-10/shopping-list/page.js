@@ -2,20 +2,23 @@
 import ItemList from "./item-list";
 import NewItem from "./new-item";
 import MealIdeas from "./meal-ideas";
-import itemsData from "./items.json";
-import { useUserAuth } from "../_utils/auth-context"; 
+import { getItems, addItems } from "../_services/shopping-list-service";
+import { useUserAuth } from "../_utils/auth-context";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Page() {
-
+export default function ShoppingList() {
+  
   const router = useRouter();
   const { user } = useUserAuth();
-  const [items, setItems] = useState(itemsData);
+  const [items, setItems] = useState([]);
   const [selectedItemName, setSelectedItemName] = useState("");
 
-  const handleAddItem = (newItem) => {
-    setItems([...items, newItem]);
+  const handleAddItem = async (newItem) => {
+    console.log("Trying to add item: ", newItem);
+    const newItemId = await addItems(user.uid, newItem);
+    const updatedItems = await getItems(user.uid);
+    setItems(updatedItems);
   };
 
   const handleItemSelect = (item) => {
@@ -33,8 +36,19 @@ export default function Page() {
   };
 
   useEffect(() => {
+    const loadItems = async () => {
+      if (user) {
+        const fetchedItems = await getItems(user.uid);
+        console.log(fetchedItems);
+        setItems(fetchedItems);
+      }
+    };
+    loadItems();
+  }, [user]);
+
+  useEffect(() => {
     if (!user) {
-      router.push("/week-9");
+      router.push("/week-10");
     }
   }, [user, router]);
 
@@ -42,7 +56,7 @@ export default function Page() {
 
   return (
     <main>
-      <title>Week 9 Assignment</title>
+      <title>Week 10 Assignment</title>
       <h1 className="mb-3 ml-3 mt-3 text-center text-4xl font-bold font-sans">
         Shopping List
       </h1>
